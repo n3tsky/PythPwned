@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 # Inspired by https://github.com/thewhiteh4t/pwnedOrNot
 import argparse
 import requests
@@ -12,16 +12,16 @@ USER_AGENT="Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:64.0) Gecko/20100101 Fire
 def http_query(csfscrape, HTTP_REQ):
     # Request through cfscrape (Cloud-flare)
     if cfscrape:
-        return requests.get(URL, headers=headers, proxies=proxy)
+        return cfscrape.get_tokens(HTTP_REQ["url"], user_agent=HTTP_REQ["user-agent"])
     else: # Normal request
         proxy = {} # {'http': "socks://127.0.0.1:8181"}
         headers = {
-            "User-Agent": "%s" % (USER_AGENT),
+            "User-Agent": "%s" % (HTTP_REQ["user-agent"]),
             "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
             "Accept_language": "en-US,en;q=0.5",
             "Accept_encoding": "gzip, deflate, br"
         }
-        return requests.get(URL, headers=headers, proxies=proxy)
+        return requests.get(HTTP_REQ["url"], headers=headers, proxy=HTTP_REQ["proxy"])
 
 def get_cookies(URL):
     HTTP_REQ = {}
