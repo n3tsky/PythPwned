@@ -13,6 +13,8 @@ BASE_URL="https://haveibeenpwned.com/api/v2"
 USER_AGENT="Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:64.0) Gecko/20100101 Firefox/64.0"
 DEFAULT_WAIT=2
 # Color
+GREEN="\033[0;32m"
+RED="\033[0;31m"
 ORANGE="\033[0;33m"
 NOCOLOR="\033[0m"
 
@@ -56,6 +58,20 @@ def parse_json(data, needed):
         g.append(l)
     return g
 
+# Lookup for Pastebin's paste (still available or not)
+def check_pastebin(HTTP_REQ, url):
+    HTTP_REQ["url"] = "%s" % (url)
+    req = http_query(0, HTTP_REQ)
+    if req.status_code == 200:
+        if "This page has been removed" in req.text:
+            return "%sX%s" % (RED, NOCOLOR)
+        else:
+            return "%sV%s" %(GREEN, NOCOLOR)
+    elif req.status_code == 404:
+            return "%sX%s" % (RED, NOCOLOR)
+    else: 
+        return ""
+
 # Have I Been Pwned related
 def hibp_get_cookies():
     HTTP_REQ = {}
@@ -76,9 +92,9 @@ def hibp_query(HTTP_REQ, append_url, user_account):
             print e
     elif req.status_code == 429:
         print "[!]  HTTP 429 - Too many requests. Sleeping a bit..."
-        #time.sleep(1)
+        #sleep(1)
     elif req.status_code == 404:
-        print "[-]  No data (HTTP 404)"
+        print "[-]  %sNo data (HTTP 404)%s" % (RED, NOCOLOR)
     else:
         print "[!]  HTTP error (code: %s)" % (req.status_code)
 
@@ -115,6 +131,7 @@ def hibp_query_paste(HTTP_REQ, user_account):
         for g in GRID_DATA:
             if g[0] == "Pastebin":
                 g[1] = "https://www.pastebin.com/raw/%s" % (g[1])
+                g[1] += " (%s)" % (check_pastebin(HTTP_REQ, g[1]))
         display_data(GRID_DATA, NEEDED)
 
 def read_file_2_list(filename):
@@ -142,7 +159,7 @@ def main(args):
     if args.f:
         emails = read_file_2_list(args.f)
     else:
-        emails = args.e
+        emails = {args.e}
     print "[*] Loaded %d email(s)\n" % (len(emails))
 
     # Loop through email(s)
