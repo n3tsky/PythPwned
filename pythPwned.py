@@ -92,7 +92,7 @@ def hibp_query(HTTP_REQ, append_url, user_account):
         except ValueError as e:
             print e
     elif req.status_code == 429:
-        print "[!]  HTTP 429 - Too many requests. Sleeping a bit..."
+        print "[!]  %sHTTP 429 - Too many requests. Sleeping a bit...%s" % (RED, NOCOLOR)
         sleep(1)
     elif req.status_code == 404:
         print "[-]  %sNo data (HTTP 404)%s" % (RED, NOCOLOR)
