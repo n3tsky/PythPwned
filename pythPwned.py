@@ -4,6 +4,7 @@ import sys
 from argparse import ArgumentParser, RawTextHelpFormatter
 import requests
 #import cfscrape
+from signal import signal, SIGINT
 import json
 from time import sleep
 from tabulate import tabulate
@@ -92,7 +93,7 @@ def hibp_query(HTTP_REQ, append_url, user_account):
             print e
     elif req.status_code == 429:
         print "[!]  HTTP 429 - Too many requests. Sleeping a bit..."
-        #sleep(1)
+        sleep(1)
     elif req.status_code == 404:
         print "[-]  %sNo data (HTTP 404)%s" % (RED, NOCOLOR)
     else:
@@ -113,7 +114,7 @@ def hibp_query_breach(HTTP_REQ, user_account):
         # Order by date
         GRID_DATA.sort(key=lambda r: r[1], reverse=True)
         for g in GRID_DATA:
-            g[3] = ", ".join(g[3])
+            g[3] = "\n".join(g[3])
 
         # Display
         display_data(GRID_DATA, GRID_HEADERS)
@@ -134,6 +135,9 @@ def hibp_query_paste(HTTP_REQ, user_account):
                 g[1] += " (%s)" % (check_pastebin(HTTP_REQ, g[1]))
         display_data(GRID_DATA, NEEDED)
 
+## Generic functions
+
+# Read file to a Python list
 def read_file_2_list(filename):
     try:
         with open(filename, "r") as fin:
@@ -141,6 +145,11 @@ def read_file_2_list(filename):
     except IOError as e:
         print "[!] Cannot open file \"%s\" (%s).\nExiting..." % (filename, e)
         sys.exit(1)
+
+# SIGINT handler
+def interruptHandler(signal, frame):
+    print "\n[!] Interrupted by user.\nStopping..."
+    sys.exit(0)
 
 # Main
 def main(args):
@@ -167,9 +176,9 @@ def main(args):
         #cookies = hibp_get_cookies()
         print "\n[*] Results for \"%s%s%s\"\n" % (ORANGE, email, NOCOLOR)
         hibp_query_breach(HTTP_REQ, email)
-        #sleep(args.t)
+        sleep(args.t)
         hibp_query_paste(HTTP_REQ, email)
-        #sleep(args.t)
+        sleep(args.t)
 
 
 # Parse arguments
@@ -188,5 +197,6 @@ def parse_args():
     return args
 
 if __name__ == "__main__":
+    signal(SIGINT, interruptHandler)
     args = parse_args()
-    main(args)
+main(args)
