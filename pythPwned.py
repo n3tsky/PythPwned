@@ -199,4 +199,4 @@ def parse_args():
 if __name__ == "__main__":
     signal(SIGINT, interruptHandler)
     args = parse_args()
-main(args)
+    main(args)
